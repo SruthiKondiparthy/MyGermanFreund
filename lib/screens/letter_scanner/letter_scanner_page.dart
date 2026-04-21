@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:doc_scan_flutter/doc_scan.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:opencv_4/opencv_4.dart' as cv2;
+//import 'package:opencv_4/opencv_4.dart' as cv2;
+import 'package:image/image.dart' as img;
 import '../../services/ocr_service.dart';
 import '../../services/document_analyzer.dart';
 import 'letter_result_page.dart';
@@ -117,22 +118,67 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
   }
 
   Future<String> _enhanceAndCropImage(String path) async {
-    final cropped = await cv2.canny(path, 100, 200);
     final Directory dir = await getApplicationDocumentsDirectory();
-    final String outPath = '${dir.path}/enhanced_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    await File(outPath).writeAsBytes(cropped);
+    final String outPath =
+        '${dir.path}/enhanced_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    // Just copy the original image for now
+    await File(path).copy(outPath);
+
     return outPath;
+  }
+
+  double computeLaplacianVariance(img.Image image) {
+    final kernel = [
+      [0,  1, 0],
+      [1, -4, 1],
+      [0,  1, 0],
+    ];
+
+    final width = image.width;
+    final height = image.height;
+
+    final laplacianValues = <double>[];
+
+    for (int y = 1; y < height - 1; y++) {
+      for (int x = 1; x < width - 1; x++) {
+        double sum = 0;
+
+        for (int ky = -1; ky <= 1; ky++) {
+          for (int kx = -1; kx <= 1; kx++) {
+            final pixel = image.getPixel(x + kx, y + ky);
+            final gray = img.getLuminance(pixel);
+            sum += gray * kernel[ky + 1][kx + 1];
+          }
+        }
+
+        laplacianValues.add(sum);
+      }
+    }
+
+    final mean = laplacianValues.reduce((a, b) => a + b) / laplacianValues.length;
+    final variance = laplacianValues
+        .map((v) => (v - mean) * (v - mean))
+        .reduce((a, b) => a + b) /
+        laplacianValues.length;
+
+    return variance;
   }
 
   Future<bool> _isImageClear(String path) async {
     try {
-      // Use OpenCV’s variance of Laplacian to detect blur
-      final variance = await cv2.laplacianVariance(path);
-      return variance > 100.0; // tune this threshold if needed
+      final bytes = await File(path).readAsBytes();
+      final image = img.decodeImage(bytes);
+      if (image == null) return true;
+
+      final variance = computeLaplacianVariance(image);
+
+      return variance > 100.0;
     } catch (_) {
-      return true; // assume OK if check fails
+      return true;
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
