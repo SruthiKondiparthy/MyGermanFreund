@@ -25,7 +25,8 @@ void main() async {
   );
 
   final storage = FlutterSecureStorage();
-  final isVerified = await storage.read(key: 'isVerified');
+  final isVerified = 'true';
+  //final isVerified = await storage.read(key: 'isVerified');
 
   runApp(MyGermanFreundApp(isVerified: isVerified == 'true'));
 }
