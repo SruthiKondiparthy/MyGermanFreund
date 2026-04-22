@@ -33,10 +33,13 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
         scannedFiles = null;
       }
 
+      if (!mounted) return;
+
       String? imagePath;
       if (scannedFiles == null || scannedFiles.isEmpty) {
         // Fallback: manual picker
         imagePath = await _pickFromCameraOrGallery();
+        if (!mounted) return;
         if (imagePath == null) {
           setState(() => _isLoading = false);
           return;
@@ -44,6 +47,7 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
 
         // Run edge detection + enhancement
         imagePath = await _enhanceAndCropImage(imagePath);
+        if (!mounted) return;
       } else {
         imagePath = scannedFiles.first;
       }
@@ -52,6 +56,7 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
 
       // ✅ Step 1: Check image clarity before OCR
       final clarityOK = await _isImageClear(imagePath);
+      if (!mounted) return;
       if (!clarityOK) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -65,6 +70,7 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
 
       // ✅ Step 2: Run OCR
       final extractedText = await OcrService.extractText(imageFile);
+      if (!mounted) return;
       final analyzedData = DocumentAnalyzer.analyzeText(extractedText);
 
       setState(() => _isLoading = false);
@@ -79,6 +85,7 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Error scanning document: $e")));
@@ -97,8 +104,11 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
               leading: const Icon(Icons.camera_alt),
               title: const Text("Use Camera"),
               onTap: () async {
-                final picked =
-                await _picker.pickImage(source: ImageSource.camera);
+                final picked = await _picker.pickImage(
+                  source: ImageSource.camera,
+                  maxWidth: 1920,
+                  imageQuality: 85,
+                );
                 Navigator.pop(context, picked?.path);
               },
             ),
@@ -106,8 +116,11 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
               leading: const Icon(Icons.photo_library),
               title: const Text("Pick from Gallery"),
               onTap: () async {
-                final picked =
-                await _picker.pickImage(source: ImageSource.gallery);
+                final picked = await _picker.pickImage(
+                  source: ImageSource.gallery,
+                  maxWidth: 1920,
+                  imageQuality: 85,
+                );
                 Navigator.pop(context, picked?.path);
               },
             ),
@@ -129,40 +142,43 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
   }
 
   double computeLaplacianVariance(img.Image image) {
-    final kernel = [
-      [0,  1, 0],
+    // Downscale to at most 800px wide to avoid OOM on high-resolution images.
+    final img.Image resized =
+        image.width > 800 ? img.copyResize(image, width: 800) : image;
+
+    const kernel = [
+      [0, 1, 0],
       [1, -4, 1],
-      [0,  1, 0],
+      [0, 1, 0],
     ];
 
-    final width = image.width;
-    final height = image.height;
+    final width = resized.width;
+    final height = resized.height;
 
-    final laplacianValues = <double>[];
+    // Streaming variance: no list allocation, sample every other pixel (step=2).
+    double sum = 0;
+    double sumSq = 0;
+    int n = 0;
 
-    for (int y = 1; y < height - 1; y++) {
-      for (int x = 1; x < width - 1; x++) {
-        double sum = 0;
-
+    for (int y = 1; y < height - 1; y += 2) {
+      for (int x = 1; x < width - 1; x += 2) {
+        double v = 0;
         for (int ky = -1; ky <= 1; ky++) {
           for (int kx = -1; kx <= 1; kx++) {
-            final pixel = image.getPixel(x + kx, y + ky);
-            final gray = img.getLuminance(pixel);
-            sum += gray * kernel[ky + 1][kx + 1];
+            final pixel = resized.getPixel(x + kx, y + ky);
+            final gray = img.getLuminance(pixel).toDouble();
+            v += gray * kernel[ky + 1][kx + 1];
           }
         }
-
-        laplacianValues.add(sum);
+        sum += v;
+        sumSq += v * v;
+        n++;
       }
     }
 
-    final mean = laplacianValues.reduce((a, b) => a + b) / laplacianValues.length;
-    final variance = laplacianValues
-        .map((v) => (v - mean) * (v - mean))
-        .reduce((a, b) => a + b) /
-        laplacianValues.length;
-
-    return variance;
+    if (n == 0) return 0;
+    final mean = sum / n;
+    return (sumSq / n) - (mean * mean);
   }
 
   Future<bool> _isImageClear(String path) async {
@@ -173,7 +189,8 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
 
       final variance = computeLaplacianVariance(image);
 
-      return variance > 100.0;
+      // Threshold lowered to 40.0 because we now analyze a downscaled image.
+      return variance > 40.0;
     } catch (_) {
       return true;
     }

@@ -24,6 +24,7 @@ class _LetterResultPageState extends State<LetterResultPage> {
   Future<void> _translateText() async {
     setState(() => isTranslating = true);
     final result = await TranslationService.translateToEnglish(widget.fullText);
+    if (!mounted) return;
     setState(() {
       translatedText = result;
       isTranslating = false;
