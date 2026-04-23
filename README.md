@@ -1,167 +1,127 @@
-📘 README.md — MyGermanFreund
+# MyGermanFreund
 
-A companion app for newcomers in Germany: checklists, letter scanning, and cultural insights.
+> A companion app for newcomers in Germany — letter scanning, bureaucracy checklists, and cultural conversation starters.
 
-🇩🇪 About MyGermanFreund
+🌐 **Live app:** [https://mygermanfreund.web.app/](https://mygermanfreund.web.app/)
 
-MyGermanFreund is a mobile app designed to help newcomers in Germany navigate bureaucracy, understand official letters, and stay updated on German daily life.
-The goal is to make settling in easier by providing:
+---
 
-📄 AI-powered Letter Scanning (OCR + translation + summarization)
+## 🤖 How AI Is Used in This Project
 
-📝 Step-by-step Checklists for Anmeldung, Kitas, Health Insurance, etc.
+AI drives both the **development workflow** and the **product experience**:
 
-🗞️ German Buzz – trending news simplified for conversational use
+**Development workflow**
+- GitHub Copilot accelerates feature implementation — OCR pipelines, regex extraction logic, and UI scaffolding were iterated rapidly using AI pair-programming.
+- AI-assisted code review catches edge cases (e.g., OOM on large images, async `mounted` guards) before they reach production.
+- Prompt-driven architecture decisions: feature scoping, fallback UX flows (e.g., doc scanner → camera/gallery graceful degradation), and tech-stack trade-offs were refined through AI consultation.
 
-🔍 Beginner-friendly, login-free usage for maximum accessibility
+**Product features**
+- **On-device OCR** (Google ML Kit) extracts text from German official letters — no server round-trip needed.
+- **Regex-based document analysis** (`DocumentAnalyzer`) extracts dates, deadlines, amounts, IBAN, reference numbers, and contact details from raw OCR output.
+- **Translation pipeline** converts extracted German text to English, making bureaucratic letters immediately actionable for newcomers.
 
-📱 Modern Flutter UI for Android (iOS later)
+---
 
-🚀 Phase 1 Scope
+## ✅ Features Available Now
 
-The first release focuses on core utility features:
+| Screen / Feature | Description |
+|---|---|
+| **Home** | Dashboard with daily newcomer tips and quick navigation |
+| **Letter Scanner** | Capture or upload a German letter (camera or gallery); on-device OCR via Google ML Kit |
+| **Key info extraction** | Auto-extracts dates, deadlines, amounts, IBAN, reference numbers, emails, and phones from scanned text |
+| **English translation** | Translates full scanned German text to English |
+| **Bureaucracy Checklists** | Step-by-step checklists — Anmeldung, SIM card, bank account, Krankenkasse, Kita/School |
+| **Mandatory Bureaucratic Tasks** | Priority task list with direct links to official resources |
+| **Location Search** | WebView-powered search to find nearby Bürgeramt, banks, and other offices |
+| **SIM Card Guide** | Guide to choosing a mobile provider in Germany |
+| **Profile** | Phone/OTP verification with secure local storage |
+| **About** | App overview and developer info |
+| **PDF Viewer** | View PDF documents in-app |
+| Login-free usage | Core features accessible without an account |
+| **Web app** | [mygermanfreund.web.app](https://mygermanfreund.web.app/) — Firebase Hosting |
 
-✔️ 1. Letter Scanner (Prototype)
+---
 
-Capture or upload letters
+## 🔜 Upcoming Features
 
-Extract text using OCR
+| Screen / Feature | Status |
+|---|---|
+| **AI Chat** — "Chat with your German Buddy" AI assistant | 🚧 Coming soon |
+| **German Quiz** — interactive language learning quizzes | 🚧 Coming soon |
+| **Job Search** — German job portals and CV preparation tips | 🚧 Coming soon |
+| **Accommodation** — apartment and WG (shared flat) finder tips | 🚧 Coming soon |
+| **Public Transport** — transit card guide and city transit apps | 🚧 Coming soon |
+| **Settings** — app preferences and notification controls | 🚧 Coming soon |
+| PDF letter upload support | 🗺️ Planned |
+| Full offline / cloud OCR toggle | 🗺️ Planned |
+| Multi-language UI (EN / DE / Easy German) | 🗺️ Planned |
+| Saved checklists and user profiles | 🗺️ Planned |
+| Push notifications for task deadlines | 🗺️ Planned |
+| Community Q&A | 🗺️ Planned |
+| Public API integrations (Bürgeramt availability, Kita portal) | 🗺️ Planned |
+| **Freemium model** — free tier with core features; premium subscription for advanced tools | 🗺️ Planned |
+| **Subscriptions** — in-app subscription management (billing, plan upgrades, cancellations) | 🗺️ Planned |
 
-Translate to English or Easy German
+---
 
-Provide a short summary
+## 🏗️ Technical Specifications
 
-Quick "Important dates" extraction (coming soon)
+| Layer | Technology |
+|---|---|
+| **Frontend** | Flutter (Dart) — cross-platform (Android primary, web via Firebase Hosting) |
+| **Backend / Infra** | Firebase (Hosting, Auth-ready, Firestore-ready) |
+| **OCR** | Google ML Kit — `google_mlkit_text_recognition` (on-device, Latin script) |
+| **Document analysis** | Custom Dart (`DocumentAnalyzer`) — regex extraction for German letter patterns |
+| **Translation** | `translator` package (Dart); architecture supports swap to DeepL / Cloud Translate |
+| **Image input** | `image_picker` — camera capture + gallery upload; images downscaled to 2000 px max to prevent OOM |
+| **State management** | Flutter built-in (`setState`); structured for easy migration to Riverpod/Bloc |
+| **CI / Hosting** | Firebase CLI + GitHub Actions (Firebase Hosting deploy) |
 
-✔️ 2. Bureaucratic Checklists
-
-Step-by-step guides for:
-✔ Anmeldung
-✔ Getting a SIM card
-✔ Opening a bank account
-✔ Krankenkasse registration
-✔ Kita / School registration
-
-No login required
-
-Optimized for newcomers
-
-✔️ 3. German Buzz
-
-Curated simple-language “topic starters”
-
-Useful for workplace/school conversations
-
-🏗️ Tech Stack
-Frontend
-
-Flutter (Dart)
-
-Clean screen structure & theming
-
-State management: (Basic set, can expand later)
-
-Backend
-
-Firebase (Auth, Storage, Firestore planned)
-
-OCR: Google ML Kit (local)
-
-Translation: API-ready structure (OpenAI/DeepL later)
-
-📱 App Structure
+**Project layout (key paths)**
+```
 lib/
-├── main.dart
 ├── screens/
-│   ├── letter_scanner/
-│   │    ├── letter_scanner_page.dart
-│   │    ├── letter_result_page.dart
-│   ├── german_buzz_page.dart
-│   ├── home_screen.dart
-│   ├── mandatory_tasks_page.dart
-├── services/
-│   ├── ocr_service.dart
-│   ├── translation_service.dart
-│   ├── document_analyzer.dart
-├── widgets/
-├── theme/
-│   └── app_colors.dart
+│   ├── home_screen.dart            # Dashboard + daily tips
+│   ├── letter_scanner/             # LetterScannerPage, LetterResultPage
+│   ├── Essentials/                 # ChecklistPage, ChecklistDetailPage
+│   ├── mandatory_tasks_page.dart   # Priority task list with official links
+│   ├── location_search_page.dart   # WebView-powered office search
+│   ├── sim_card_page.dart          # SIM card provider guide
+│   ├── german_buzz_page.dart       # Conversation starters
+│   ├── profile_page.dart           # OTP phone auth + secure storage
+│   ├── pdf_viewer_page.dart        # In-app PDF viewer
+│   ├── chat_page.dart              # AI chat (coming soon)
+│   ├── quiz_page.dart              # Language quiz (coming soon)
+│   ├── job_search_page.dart        # Job search (coming soon)
+│   ├── accommodation_page.dart     # Accommodation tips (coming soon)
+│   └── public_transport_page.dart  # Transit guide (coming soon)
+├── services/                 # OcrService, DocumentAnalyzer, TranslationService
+├── theme/                    # AppColors
+assets/                       # Static assets
+```
 
-⚙️ Setup Instructions
-1️⃣ Clone the repo
-git clone <your-repo-url>
-cd mygermanfreund
+---
 
-2️⃣ Install dependencies
+## ⚙️ Local Setup
+
+```bash
+git clone https://github.com/SruthiKondiparthy/MyGermanFreund.git
+cd MyGermanFreund
 flutter pub get
-
-3️⃣ Configure Firebase
-
-Create a Firebase project
-
-Add Android app
-
-Download google-services.json
-
-Place it in: android/app/
-
-Add Firebase dependencies in android/app/build.gradle.kts
-
-4️⃣ Run the app
+# Add android/app/google-services.json from your Firebase project
 flutter run
+```
 
-🧪 Testing (Upcoming)
+---
 
-Unit tests for OCR parsing
+## 🤝 Contributing
 
-UI widget tests
+Issues and pull requests are welcome. Please open an issue first to discuss larger changes.
 
-Integration tests (letter upload → translation → result)
+## 📝 License
 
-🛣️ Roadmap
-Phase 1 (Current)
+MIT (see LICENSE file)
 
-Core navigation
+## 👩‍💻 Developer
 
-Letter scanner prototype
-
-Onboarding checklists
-
-German Buzz feed
-
-Phase 2
-
-Local & cloud OCR switch
-
-Full translation support
-
-Smart deadlines detection
-
-PDF letter support
-
-Multi-language UI (EN, DE, Easy DE)
-
-Phase 3
-
-Profiles & saved checklists
-
-Community Q&A
-
-Push notifications for tasks
-
-Integration with public APIs
-(Bürgeramt availability, Kita portal info)
-
-🤝 Contributing
-
-Contributions, ideas, and feedback are welcome!
-Open an issue or create a pull request.
-
-📝 License
-
-MIT License (to be added if open-source)
-
-👩‍💻 About the Developer
-
-MyGermanFreund is built by Sruthi Ravuru,
-a software engineer + product developer passionate about improving the lives of newcomers in Germany.
+Built by **Sruthi Ravuru** — software engineer and product developer passionate about helping newcomers thrive in Germany.
