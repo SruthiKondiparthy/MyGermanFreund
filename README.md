@@ -59,6 +59,8 @@ AI drives both the **development workflow** and the **product experience**:
 | Push notifications for task deadlines | 🗺️ Planned |
 | Community Q&A | 🗺️ Planned |
 | Public API integrations (Bürgeramt availability, Kita portal) | 🗺️ Planned |
+| **Freemium model** — free tier with core features; premium subscription for advanced tools | 🗺️ Planned |
+| **Subscriptions** — in-app subscription management (billing, plan upgrades, cancellations) | 🗺️ Planned |
 
 ---
 
