@@ -24,28 +24,41 @@ AI drives both the **development workflow** and the **product experience**:
 
 ## ✅ Features Available Now
 
-| Feature | Status |
+| Screen / Feature | Description |
 |---|---|
-| **Letter Scanner** — capture or upload a letter image (camera or gallery) | ✅ Available |
-| **OCR text extraction** — on-device via Google ML Kit | ✅ Available |
-| **Key info extraction** — dates, deadlines, amounts, IBAN, reference numbers, emails, phones | ✅ Available |
-| **English translation** of scanned German text | ✅ Available |
-| **Bureaucracy Checklists** — Anmeldung, SIM card, bank account, Krankenkasse, Kita/School | ✅ Available |
-| **German Buzz** — curated simple-language conversation starters | ✅ Available |
-| Login-free usage | ✅ Available |
-| Web app (Firebase Hosting) | ✅ [mygermanfreund.web.app](https://mygermanfreund.web.app/) |
+| **Home** | Dashboard with daily newcomer tips and quick navigation |
+| **Letter Scanner** | Capture or upload a German letter (camera or gallery); on-device OCR via Google ML Kit |
+| **Key info extraction** | Auto-extracts dates, deadlines, amounts, IBAN, reference numbers, emails, and phones from scanned text |
+| **English translation** | Translates full scanned German text to English |
+| **Bureaucracy Checklists** | Step-by-step checklists — Anmeldung, SIM card, bank account, Krankenkasse, Kita/School |
+| **Mandatory Bureaucratic Tasks** | Priority task list with direct links to official resources |
+| **Location Search** | WebView-powered search to find nearby Bürgeramt, banks, and other offices |
+| **SIM Card Guide** | Guide to choosing a mobile provider in Germany |
+| **Profile** | Phone/OTP verification with secure local storage |
+| **About** | App overview and developer info |
+| **PDF Viewer** | View PDF documents in-app |
+| Login-free usage | Core features accessible without an account |
+| **Web app** | [mygermanfreund.web.app](https://mygermanfreund.web.app/) — Firebase Hosting |
 
 ---
 
-## 🗺️ Planned
+## 🔜 Upcoming Features
 
-- PDF letter upload support
-- Full offline / cloud OCR toggle
-- Multi-language UI (EN / DE / Easy German)
-- Saved checklists and user profiles
-- Push notifications for task deadlines
-- Community Q&A
-- Public API integrations (Bürgeramt, Kita portal)
+| Screen / Feature | Status |
+|---|---|
+| **AI Chat** — "Chat with your German Buddy" AI assistant | 🚧 Coming soon |
+| **German Quiz** — interactive language learning quizzes | 🚧 Coming soon |
+| **Job Search** — German job portals and CV preparation tips | 🚧 Coming soon |
+| **Accommodation** — apartment and WG (shared flat) finder tips | 🚧 Coming soon |
+| **Public Transport** — transit card guide and city transit apps | 🚧 Coming soon |
+| **Settings** — app preferences and notification controls | 🚧 Coming soon |
+| PDF letter upload support | 🗺️ Planned |
+| Full offline / cloud OCR toggle | 🗺️ Planned |
+| Multi-language UI (EN / DE / Easy German) | 🗺️ Planned |
+| Saved checklists and user profiles | 🗺️ Planned |
+| Push notifications for task deadlines | 🗺️ Planned |
+| Community Q&A | 🗺️ Planned |
+| Public API integrations (Bürgeramt availability, Kita portal) | 🗺️ Planned |
 
 ---
 
@@ -65,7 +78,21 @@ AI drives both the **development workflow** and the **product experience**:
 **Project layout (key paths)**
 ```
 lib/
-├── screens/letter_scanner/   # LetterScannerPage, LetterResultPage
+├── screens/
+│   ├── home_screen.dart            # Dashboard + daily tips
+│   ├── letter_scanner/             # LetterScannerPage, LetterResultPage
+│   ├── Essentials/                 # ChecklistPage, ChecklistDetailPage
+│   ├── mandatory_tasks_page.dart   # Priority task list with official links
+│   ├── location_search_page.dart   # WebView-powered office search
+│   ├── sim_card_page.dart          # SIM card provider guide
+│   ├── german_buzz_page.dart       # Conversation starters
+│   ├── profile_page.dart           # OTP phone auth + secure storage
+│   ├── pdf_viewer_page.dart        # In-app PDF viewer
+│   ├── chat_page.dart              # AI chat (coming soon)
+│   ├── quiz_page.dart              # Language quiz (coming soon)
+│   ├── job_search_page.dart        # Job search (coming soon)
+│   ├── accommodation_page.dart     # Accommodation tips (coming soon)
+│   └── public_transport_page.dart  # Transit guide (coming soon)
 ├── services/                 # OcrService, DocumentAnalyzer, TranslationService
 ├── theme/                    # AppColors
 assets/                       # Static assets
