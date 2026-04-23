@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:doc_scan_flutter/doc_scan.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-//import 'package:opencv_4/opencv_4.dart' as cv2;
 import 'package:image/image.dart' as img;
 import '../../services/ocr_service.dart';
 import '../../services/document_analyzer.dart';
@@ -20,41 +19,22 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
-  Future<void> _scanDocument() async {
+  // Entry point: show the source-picker dialog, then process the chosen image.
+  Future<void> _onScanButtonPressed() async {
+    final choice = await _showSourcePickerDialog();
+    if (choice == null || !mounted) return;
+
+    setState(() => _isLoading = true);
     try {
-      setState(() => _isLoading = true);
-
-      List<String>? scannedFiles;
-
-      try {
-        // Try Google Doc Scanner first
-        scannedFiles = await DocumentScanner.scan(format: DocScanFormat.jpeg);
-      } catch (_) {
-        scannedFiles = null;
-      }
-
+      final imagePath = await _acquireImage(choice);
       if (!mounted) return;
 
-      String? imagePath;
-      if (scannedFiles == null || scannedFiles.isEmpty) {
-        // Fallback: manual picker
-        imagePath = await _pickFromCameraOrGallery();
-        if (!mounted) return;
-        if (imagePath == null) {
-          setState(() => _isLoading = false);
-          return;
-        }
-
-        // Run edge detection + enhancement
-        imagePath = await _enhanceAndCropImage(imagePath);
-        if (!mounted) return;
-      } else {
-        imagePath = scannedFiles.first;
+      if (imagePath == null) {
+        setState(() => _isLoading = false);
+        return;
       }
 
-      final imageFile = File(imagePath);
-
-      // ✅ Step 1: Check image clarity before OCR
+      // Check image clarity before OCR
       final clarityOK = await _isImageClear(imagePath);
       if (!mounted) return;
       if (!clarityOK) {
@@ -68,11 +48,20 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
         return;
       }
 
-      // ✅ Step 2: Run OCR
-      final extractedText = await OcrService.extractText(imageFile);
+      final extractedText = await OcrService.extractText(File(imagePath));
       if (!mounted) return;
-      final analyzedData = DocumentAnalyzer.analyzeText(extractedText);
 
+      if (extractedText.trim().isEmpty) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  "No text detected. Try better lighting or a closer scan.")),
+        );
+        return;
+      }
+
+      final analyzedData = DocumentAnalyzer.analyzeText(extractedText);
       setState(() => _isLoading = false);
 
       Navigator.push(
@@ -92,8 +81,79 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
     }
   }
 
-  Future<String?> _pickFromCameraOrGallery() async {
-    return await showDialog<String>(
+  // Returns the image file path for the chosen source, or null if cancelled.
+  Future<String?> _acquireImage(_ScanChoice choice) async {
+    switch (choice) {
+      case _ScanChoice.camera:
+        final picked = await _picker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: 85,
+          maxWidth: 2000,
+        );
+        return picked?.path;
+
+      case _ScanChoice.gallery:
+        final picked = await _picker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 85,
+          maxWidth: 2000,
+        );
+        return picked?.path;
+
+      case _ScanChoice.docScanner:
+        return await _tryDocScanner();
+    }
+  }
+
+  // Attempts to use the Google Play document scanner.
+  // On PlatformException or "feature not available" errors, shows a friendly
+  // SnackBar and returns null so the caller can present the source picker again.
+  Future<String?> _tryDocScanner() async {
+    try {
+      final scannedFiles = await DocumentScanner.scan(format: DocScanFormat.jpeg);
+      if (scannedFiles == null || scannedFiles.isEmpty) return null;
+      return scannedFiles.first;
+    } catch (e) {
+      if (!mounted) return null;
+      final message = e.toString().toLowerCase();
+      final bool isUnavailable;
+      if (e is PlatformException) {
+        // Check common codes reported by doc_scan_flutter when scanner is absent.
+        final code = e.code.toLowerCase();
+        isUnavailable = code.contains('unavailable') ||
+            code.contains('not_found') ||
+            code.contains('activity') ||
+            (e.message?.toLowerCase().contains('feature not available') ?? false) ||
+            (e.message?.toLowerCase().contains('google play') ?? false);
+      } else {
+        isUnavailable = message.contains('feature not available') ||
+            message.contains('google play') ||
+            message.contains('unavailable');
+      }
+
+      if (isUnavailable) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                "Document scanner not available on this device. Please use Camera or Upload."),
+          ),
+        );
+        // Re-open the source picker so the user can choose camera/gallery.
+        final fallback = await _showSourcePickerDialog(
+            excludeDocScanner: true);
+        if (!mounted || fallback == null) return null;
+        return _acquireImage(fallback);
+      }
+      // Unexpected error — re-throw so the outer handler shows it.
+      rethrow;
+    }
+  }
+
+  // Shows the source-picker dialog. Set [excludeDocScanner] to hide the
+  // Document Scanner option (used when it has already failed).
+  Future<_ScanChoice?> _showSourcePickerDialog(
+      {bool excludeDocScanner = false}) {
+    return showDialog<_ScanChoice>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Select Image Source"),
@@ -102,47 +162,35 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text("Use Camera"),
-              onTap: () async {
-                final picked = await _picker.pickImage(
-                  source: ImageSource.camera,
-                  maxWidth: 1920,
-                  imageQuality: 85,
-                );
-                Navigator.pop(context, picked?.path);
-              },
+              title: const Text("Scan with Camera"),
+              onTap: () => Navigator.pop(context, _ScanChoice.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text("Pick from Gallery"),
-              onTap: () async {
-                final picked = await _picker.pickImage(
-                  source: ImageSource.gallery,
-                  maxWidth: 1920,
-                  imageQuality: 85,
-                );
-                Navigator.pop(context, picked?.path);
-              },
+              title: const Text("Upload Image"),
+              onTap: () => Navigator.pop(context, _ScanChoice.gallery),
             ),
+            if (!excludeDocScanner)
+              ListTile(
+                leading: const Icon(Icons.document_scanner),
+                title: const Text("Use Document Scanner"),
+                subtitle: const Text("Availability depends on device support"),
+                onTap: () => Navigator.pop(context, _ScanChoice.docScanner),
+              ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: const Text("Cancel"),
+          ),
+        ],
       ),
     );
   }
 
-  Future<String> _enhanceAndCropImage(String path) async {
-    final Directory dir = await getApplicationDocumentsDirectory();
-    final String outPath =
-        '${dir.path}/enhanced_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-    // Just copy the original image for now
-    await File(path).copy(outPath);
-
-    return outPath;
-  }
-
-  double computeLaplacianVariance(img.Image image) {
-    // Downscale to at most 800px wide to avoid OOM on high-resolution images.
+  // Blur detection: downscale + sampling + streaming variance to avoid OOM.
+  double _computeLaplacianVariance(img.Image image) {
     final img.Image resized =
         image.width > 800 ? img.copyResize(image, width: 800) : image;
 
@@ -155,7 +203,6 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
     final width = resized.width;
     final height = resized.height;
 
-    // Streaming variance: no list allocation, sample every other pixel (step=2).
     double sum = 0;
     double sumSq = 0;
     int n = 0;
@@ -186,16 +233,11 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
       final bytes = await File(path).readAsBytes();
       final image = img.decodeImage(bytes);
       if (image == null) return true;
-
-      final variance = computeLaplacianVariance(image);
-
-      // Threshold lowered to 40.0 because we now analyze a downscaled image.
-      return variance > 40.0;
+      return _computeLaplacianVariance(image) > 40.0;
     } catch (_) {
       return true;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -208,16 +250,19 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
         child: _isLoading
             ? const CircularProgressIndicator()
             : ElevatedButton.icon(
-          onPressed: _scanDocument,
-          icon: const Icon(Icons.document_scanner),
-          label: const Text("Scan or Upload Letter"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueAccent,
-            padding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
-        ),
+                onPressed: _onScanButtonPressed,
+                icon: const Icon(Icons.document_scanner),
+                label: const Text("Scan or Upload Letter"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 16),
+                ),
+              ),
       ),
     );
   }
 }
+
+// Internal enum for source-picker choices.
+enum _ScanChoice { camera, gallery, docScanner }
