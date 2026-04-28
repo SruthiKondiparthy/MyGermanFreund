@@ -1,0 +1,59 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+body {
+  margin: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: #111827;
+  color: white;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.topbar a {
+  color: #d1d5db;
+  text-decoration: none;
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.buzz-button {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  background: #f59e0b;
+  color: #111827;
+  font-weight: 700;
+}
