@@ -125,3 +125,15 @@ MIT (see LICENSE file)
 ## 👩‍💻 Developer
 
 Built by **Sruthi Ravuru** — software engineer and product developer passionate about helping newcomers thrive in Germany.
+
+---
+
+## 🌍 Web + API Expansion (Phase 1 delivery extension)
+
+To support your request for a dedicated web experience and backend service layer beyond Flutter mobile:
+
+- **TypeScript Web UI scaffold** added in `web-ui/` (React + Vite).
+- **FastAPI backend scaffold** added in `backend-fastapi/` for guides, scanner quota/translation, premium summary gating, subscriptions, and German Buzz feeds.
+- **Repository audit report** added in `docs/phase1_repository_audit.md` with implementation gap analysis and integration plan.
+
+These additions are designed to align with the Flutter mobile feature set while moving entitlement and quota logic server-side for secure cross-platform behavior.
