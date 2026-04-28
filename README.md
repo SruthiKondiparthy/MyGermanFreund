@@ -161,3 +161,19 @@ docker run --rm -p 8000:8000 mygermanfreund-backend:local
 docker build -t mygermanfreund-web:local ./web-ui
 docker run --rm -p 8080:80 mygermanfreund-web:local
 ```
+
+### Local CI parity command
+
+You can run local checks equivalent to the CI workflow jobs with:
+
+```bash
+make ci-local
+```
+
+Additional helper:
+
+```bash
+make clean-build-artifacts
+```
+
+This removes local generated artifacts (`__pycache__`, `node_modules`, `dist`, `tsconfig.tsbuildinfo`).
