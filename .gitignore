@@ -57,6 +57,7 @@ firebase.json
 # Other
 *.log
 .DS_Store
+Firebase Token.txt
 
 
 # Python cache/test artifacts
