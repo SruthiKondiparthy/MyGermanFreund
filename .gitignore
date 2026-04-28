@@ -58,3 +58,12 @@ firebase.json
 *.log
 .DS_Store
 
+
+# Python cache/test artifacts
+**/__pycache__/
+.pytest_cache/
+
+# Web UI build artifacts
+web-ui/node_modules/
+web-ui/dist/
+web-ui/tsconfig.tsbuildinfo

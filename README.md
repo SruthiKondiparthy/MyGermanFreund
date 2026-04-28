@@ -125,3 +125,55 @@ MIT (see LICENSE file)
 ## 👩‍💻 Developer
 
 Built by **Sruthi Ravuru** — software engineer and product developer passionate about helping newcomers thrive in Germany.
+
+---
+
+## 🌍 Web + API Expansion (Phase 1 delivery extension)
+
+To support your request for a dedicated web experience and backend service layer beyond Flutter mobile:
+
+- **TypeScript Web UI scaffold** added in `web-ui/` (React + Vite).
+- **FastAPI backend scaffold** added in `backend-fastapi/` for guides, scanner quota/translation, premium summary gating, subscriptions, and German Buzz feeds.
+- **Repository audit report** added in `docs/phase1_repository_audit.md` with implementation gap analysis and integration plan.
+
+These additions are designed to align with the Flutter mobile feature set while moving entitlement and quota logic server-side for secure cross-platform behavior.
+
+## 🚀 CI/CD and Docker
+
+### GitHub Actions
+- `CI` workflow (`.github/workflows/ci.yml`)
+  - Runs FastAPI backend tests in `backend-fastapi/`.
+  - Builds the TypeScript web app in `web-ui/`.
+- `Docker Images` workflow (`.github/workflows/docker.yml`)
+  - Builds Docker images for backend and web on PRs.
+  - Pushes images to GitHub Container Registry on `main`/`master` pushes and tags.
+
+### Docker images
+
+#### Backend (FastAPI)
+```bash
+docker build -t mygermanfreund-backend:local ./backend-fastapi
+docker run --rm -p 8000:8000 mygermanfreund-backend:local
+```
+
+#### Web UI (React/Vite static app on Nginx)
+```bash
+docker build -t mygermanfreund-web:local ./web-ui
+docker run --rm -p 8080:80 mygermanfreund-web:local
+```
+
+### Local CI parity command
+
+You can run local checks equivalent to the CI workflow jobs with:
+
+```bash
+make ci-local
+```
+
+Additional helper:
+
+```bash
+make clean-build-artifacts
+```
+
+This removes local generated artifacts (`__pycache__`, `node_modules`, `dist`, `tsconfig.tsbuildinfo`).
