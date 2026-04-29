@@ -102,6 +102,24 @@ flutter:
   assets:
     - assets/forms/anmeldung_sample.pdf
     - assets/logo.png
+    - assets/MGF_ai_assistent.png
+    - assets/MGF_guidence.png
+    - assets/MGF_Landingpage.png
+    - assets/MGF_Icon.png
+    - assets/icons/MGF_Bureaucracy.png
+    - assets/icons/MGF_PreFilledForms.png
+    - assets/icons/MGF_Smartchecklist.png
+    - assets/icons/MGF_Families.png
+    - assets/icons/MGF_Freelancers.png
+    - assets/icons/MGF_Expats.png
+    - assets/icons/MGF_Students.png
+    - assets/icons/MGF_Registration.png
+    - assets/icons/MGF_Healthcare.png
+    - assets/icons/MGF_Money.png
+    - assets/icons/MGF_Passport.png
+    - assets/icons/MGF_Assistant.png
+
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
