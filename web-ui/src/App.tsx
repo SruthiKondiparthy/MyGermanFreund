@@ -1,4 +1,5 @@
 import { Link, Route, Routes, useNavigate } from 'react-router-dom';
+import { ScannerPage } from './pages/ScannerPage';
 
 const featureCards = [
   {
@@ -142,7 +143,7 @@ export const App = () => {
       <Route path="/bureaucratic" element={<Placeholder title="Bureaucratic Guidance" />} />
       <Route path="/checklists" element={<Placeholder title="Smart Checklists" />} />
       <Route path="/prefilled" element={<Placeholder title="Pre-Filled Forms" />} />
-      <Route path="/scanner" element={<Placeholder title="Smart Letter Scanner" />} />
+      <Route path="/scanner" element={<ScannerPage />} />
       <Route path="/aichat" element={<Placeholder title="AI Chat Assistant" />} />
     </Routes>
   );

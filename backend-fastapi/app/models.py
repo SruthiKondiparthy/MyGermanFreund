@@ -25,3 +25,19 @@ class ScanQuotaResponse(BaseModel):
     used: int
     remaining: int
     premium: bool
+
+
+class LetterAnalysisRequest(BaseModel):
+    user_id: str
+    ocr_text: str
+
+
+class LetterAnalysisResponse(BaseModel):
+    original_text: str
+    translated_text: str
+    summary: str
+    due_dates: list[str]
+    amounts: list[str]
+    contact_info: list[str]
+    reference_numbers: list[str]
+    premium: bool

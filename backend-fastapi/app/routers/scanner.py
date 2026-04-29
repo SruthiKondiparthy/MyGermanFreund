@@ -1,5 +1,23 @@
 from fastapi import APIRouter, HTTPException
 
+from app.models import (
+    LetterAnalysisRequest,
+    LetterAnalysisResponse,
+    ScanQuotaResponse,
+    SummaryResponse,
+    TranslationRequest,
+    TranslationResponse,
+)
+from app.services.entitlements import get_subscription_state
+from app.services.scanner import (
+    extract_amounts,
+    extract_contact_info,
+    extract_due_dates,
+    extract_reference_numbers,
+    get_monthly_scan_usage,
+    summarize_text,
+    translate_text,
+)
 from app.models import ScanQuotaResponse, SummaryResponse, TranslationRequest, TranslationResponse
 from app.services.entitlements import get_subscription_state
 from app.services.scanner import get_monthly_scan_usage, summarize_text, translate_text
@@ -31,3 +49,22 @@ def summary(user_id: str, payload: TranslationRequest) -> SummaryResponse:
         raise HTTPException(status_code=403, detail="Premium subscription required for summaries")
 
     return SummaryResponse(summary=summarize_text(payload.text))
+
+
+@router.post("/analyze", response_model=LetterAnalysisResponse)
+def analyze_letter(payload: LetterAnalysisRequest) -> LetterAnalysisResponse:
+    subscription = get_subscription_state(payload.user_id)
+
+    translated = translate_text(payload.ocr_text, "de", "en")
+    summary_text = summarize_text(translated)
+
+    return LetterAnalysisResponse(
+        original_text=payload.ocr_text,
+        translated_text=translated,
+        summary=summary_text,
+        due_dates=extract_due_dates(payload.ocr_text),
+        amounts=extract_amounts(payload.ocr_text),
+        contact_info=extract_contact_info(payload.ocr_text),
+        reference_numbers=extract_reference_numbers(payload.ocr_text),
+        premium=bool(subscription["premium"]),
+    )
