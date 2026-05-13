@@ -1,7 +1,96 @@
 import 'package:flutter/material.dart';
+import 'letter_scanner/letter_scanner_page.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Large Logo
+              Image.asset('assets/MGF_Icon.png', height: 80),
+              const SizedBox(height: 16),
+
+              // App Name
+              const Text(
+                "MyGermanFreund",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF6C3CE1),
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                "by Athirikya Solutions",
+                style: TextStyle(fontSize: 12, color: Colors.black45),
+              ),
+              const SizedBox(height: 20),
+              const Divider(),
+              const SizedBox(height: 16),
+
+              // Mission
+              const Text(
+                "Our Mission",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Moving to Germany is exciting — but navigating official letters, bureaucracy, and cultural differences can be overwhelming.\n\nMyGermanFreund is your AI-powered companion that makes Germany feel like home. We translate and explain official German letters instantly, so you always know what to do next.\n\nNo more confusion. No more stress. Just clarity.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.black54,
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Version
+              const Text(
+                "Version 1.0.0",
+                style: TextStyle(fontSize: 11, color: Colors.black38),
+              ),
+              const SizedBox(height: 16),
+
+              // OK Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6C3CE1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    "Got it!",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,399 +99,169 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Row(
-          children: [
-            Image.asset('assets/MGF_Icon.png', height: 36),
-            const Spacer(),
-            Row(
-              children: [
-                Text('DE', style: TextStyle(fontWeight: FontWeight.bold)),
-                Switch(value: true, onChanged: (_) {}, activeColor: Colors.green),
-                Text('EN', style: TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ],
+        centerTitle: true,
+        title: GestureDetector(
+          onTap: () => _showAboutDialog(context),
+          child: Image.asset('assets/MGF_Icon.png', height: 36),
         ),
-        centerTitle: false,
       ),
-      body: SingleChildScrollView(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  Text(
-                    "Your Smart Guide to Settling in Germany 🇩🇪",
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Step-by-step guidance for Anmeldung, visas, taxes & more!",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black54,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 18),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      'assets/MGF_Landingpage.png',
-                      fit: BoxFit.cover,
-                      height: 110,
-                      width: double.infinity,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {Navigator.pushNamed(context, '/otp');},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.green,
-                            side: const BorderSide(color: Colors.green, width: 2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          child: const Text(
-                            "Log In",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {Navigator.pushNamed(context, '/onboarding');},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          child: const Text(
-                            "Get Started Now",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                ],
+            // Hero Icon
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: const Color(0xFF6C3CE1).withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.document_scanner,
+                size: 60,
+                color: Color(0xFF6C3CE1),
               ),
             ),
-            _FeatureCards(),
-            const SizedBox(height: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: _PersonaGrid(),
+            const SizedBox(height: 32),
+
+            // Title
+            const Text(
+              "Understand Any\nGerman Letter",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: Colors.black87,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Subtitle
+            const Text(
+              "Scan any official German letter and get\na plain English summary instantly.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.black45,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 48),
+
+            // Feature Pills
+            _FeaturePill(
+              icon: Icons.translate,
+              text: "Instant English Translation",
+              color: const Color(0xFF6C3CE1),
+            ),
+            const SizedBox(height: 12),
+            _FeaturePill(
+              icon: Icons.calendar_today,
+              text: "Due Dates & Amounts Extracted",
+              color: const Color(0xFFFF9500),
+            ),
+            const SizedBox(height: 12),
+            _FeaturePill(
+              icon: Icons.lock_outline,
+              text: "Private — We never store your letters",
+              color: const Color(0xFF34C759),
+            ),
+            const SizedBox(height: 12),
+            _FeaturePill(
+              icon: Icons.auto_awesome,
+              text: "Multi-page letters supported",
+              color: const Color(0xFF00C896),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: _BottomNavBar(),
-      floatingActionButton: _FloatingActionButtons(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-}
 
-class _FeatureCards extends StatelessWidget {
-  const _FeatureCards({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final features = [
-      {
-        'icon': 'assets/icons/MGF_Bureaucracy.png',
-        'title': 'Bureaucratic Guidance',
-        'desc':
-        'Get step-by-step instructions on Anmeldung, visa processes, health insurance, and taxes—no more confusion!',
-        'route': '/bureaucratic',
-      },
-      {
-        'icon': 'assets/icons/MGF_Smartchecklist.png',
-        'title': 'Smart Checklists',
-        'desc':
-        'Stay on top of important deadlines with automated task lists that remind you what to do next.',
-        'route': '/checklists',
-      },
-      {
-        'icon': 'assets/icons/MGF_PreFilledForms.png',
-        'title': 'Pre-Filled Forms',
-        'desc':
-        'Save time with auto-generated documents, ready for submission to government offices.',
-        'route': '/prefilled',
-      },
-      {
-        'icon': 'assets/icons/MGF_Assistant.png',
-        'title': 'Smart Letter Scanner',
-        'desc':
-        'Scan your official letter and we’ll break it down for you — deadlines, actions, and everything that matters.',
-        'route': '/scanner',
-      },
-      {
-        'icon': 'assets/icons/MGF_Assistant.png',
-        'title': 'AI Chat Assistant',
-        'desc':
-        'Get instant answers 24/7 to all your questions about moving and living in Germany',
-        'route': '/aichat',
-      },
-    ];
-
-    return SizedBox(
-      height: 170,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: features.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
-        itemBuilder: (context, idx) {
-          final f = features[idx];
-
-          return SizedBox(
-            width: 135,
-            child: Material(
-              color: const Color(0xFFB5B3E9),
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: () {
-                  Navigator.of(context).pushNamed(f['route'] as String);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Image.asset(
-                        f['icon'] as String,
-                        width: 26,
-                        height: 26,
-                        fit: BoxFit.contain,
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      Text(
-                        f['title'] as String,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: Colors.indigo[900],
-                          fontSize: 11,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      Expanded(
-                        child: Text(
-                          f['desc'] as String,
-                          style:
-                          Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 10,
-                            height: 1.15,
-                          ),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+      // Scan Button at bottom center
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+          child: SizedBox(
+            width: double.infinity,
+            height: 58,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LetterScannerPage(),
                   ),
+                );
+              },
+              icon: const Icon(Icons.document_scanner, size: 24),
+              label: const Text(
+                "Scan a Letter",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// Smart animate: fade in (substitute route names for real pages)
-PageRouteBuilder _smartPageRoute(String route, BuildContext context) {
-  return PageRouteBuilder(
-    transitionDuration: const Duration(milliseconds: 300),
-    pageBuilder: (_, __, ___) => Scaffold(
-      appBar: AppBar(title: Text(route.replaceAll('/', '').toUpperCase())),
-      body: Center(child: Text('Page: $route')),
-    ), // Replace with your actual page
-    transitionsBuilder: (_, animation, __, child) =>
-        FadeTransition(opacity: animation, child: child),
-  );
-}
-
-// 2x2 grid: all cards use the Figma pink/peach background
-class _PersonaGrid extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final personas = [
-      {
-        'icon': 'assets/icons/MGF_Families.png',
-        'title': 'Families',
-        'desc': 'Settle your family with ease',
-      },
-      {
-        'icon': 'assets/icons/MGF_Freelancers.png',
-        'title': 'Freelancers',
-        'desc': 'Kickstart your business in Germany',
-      },
-      {
-        'icon': 'assets/icons/MGF_Students.png',
-        'title': 'Students',
-        'desc': 'Simplify your studies in Germany',
-      },
-      {
-        'icon': 'assets/icons/MGF_Expats.png',
-        'title': 'Expats',
-        'desc': 'Start your career hassle-free',
-      },
-    ];
-    return SizedBox(
-      height: 2 * 70 + 12, // slightly taller for content
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 2.8, // close to 170x60
-        ),
-        itemCount: personas.length,
-        itemBuilder: (context, idx) {
-          final p = personas[idx];
-          return Container(
-            width: 170,
-            height: 60,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE9CABF), // Figma peach
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Image.asset(
-                  p['icon'] as String,
-                  width: 32,
-                  height: 32,
-                  fit: BoxFit.contain,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C3CE1),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        p['title'] as String,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        p['desc'] as String,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: true,
-                      ),
-                    ],
-                  ),
-                )
-              ],
+                elevation: 4,
+              ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 }
 
-class _BottomNavBar extends StatelessWidget {
+class _FeaturePill extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  const _FeaturePill({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: 12),
           Expanded(
-            child: IconButton(
-              icon: const Icon(Icons.message, color: Colors.orange),
-              onPressed: () {},
-            ),
-          ),
-          Expanded(
-            child: IconButton(
-              icon: const Icon(Icons.shopping_cart, color: Colors.grey),
-              onPressed: () {},
-            ),
-          ),
-          Expanded(
-            child: IconButton(
-              icon: const Icon(Icons.support_agent, color: Colors.blue),
-              onPressed: () {},
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _FloatingActionButtons extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        const SizedBox(width: 32),
-        FloatingActionButton(
-          heroTag: "help",
-          mini: true,
-          onPressed: () {},
-          backgroundColor: Colors.white,
-          child: const Icon(Icons.help_outline, color: Colors.blue),
-          tooltip: "Need Help?",
-        ),
-      ],
     );
   }
 }

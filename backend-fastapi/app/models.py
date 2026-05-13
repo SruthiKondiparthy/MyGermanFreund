@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class UserContext(BaseModel):
@@ -36,8 +37,15 @@ class LetterAnalysisResponse(BaseModel):
     original_text: str
     translated_text: str
     summary: str
-    due_dates: list[str]
-    amounts: list[str]
-    contact_info: list[str]
-    reference_numbers: list[str]
+    due_dates: list[str] = []
+    amounts: list[str] = []
+    contact_info: list[str] = []
+    reference_numbers: list[str] = []
     premium: bool
+    subject: Optional[str] = None
+    letter_date: Optional[str] = None
+    has_payment_due: Optional[bool] = False
+    document_type: Optional[str] = None
+    urgency: Optional[str] = "LOW"
+    sender: Optional[str] = None
+    action_required: Optional[str] = None

@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException
-
 from app.models import (
     LetterAnalysisRequest,
     LetterAnalysisResponse,
@@ -10,6 +9,7 @@ from app.models import (
 )
 from app.services.entitlements import get_subscription_state
 from app.services.scanner import (
+    analyze_letter_with_claude,
     extract_amounts,
     extract_contact_info,
     extract_due_dates,
@@ -18,9 +18,6 @@ from app.services.scanner import (
     summarize_text,
     translate_text,
 )
-from app.models import ScanQuotaResponse, SummaryResponse, TranslationRequest, TranslationResponse
-from app.services.entitlements import get_subscription_state
-from app.services.scanner import get_monthly_scan_usage, summarize_text, translate_text
 
 router = APIRouter()
 FREE_MONTHLY_LIMIT = 3
@@ -33,7 +30,12 @@ def scanner_quota(user_id: str) -> ScanQuotaResponse:
     is_premium = bool(subscription["premium"])
     limit = 999999 if is_premium else FREE_MONTHLY_LIMIT
     remaining = max(0, limit - used)
-    return ScanQuotaResponse(monthly_limit=limit, used=used, remaining=remaining, premium=is_premium)
+    return ScanQuotaResponse(
+        monthly_limit=limit,
+        used=used,
+        remaining=remaining,
+        premium=is_premium
+    )
 
 
 @router.post("/translate", response_model=TranslationResponse)
@@ -46,8 +48,10 @@ def translate(payload: TranslationRequest) -> TranslationResponse:
 def summary(user_id: str, payload: TranslationRequest) -> SummaryResponse:
     subscription = get_subscription_state(user_id)
     if not subscription["premium"]:
-        raise HTTPException(status_code=403, detail="Premium subscription required for summaries")
-
+        raise HTTPException(
+            status_code=403,
+            detail="Premium subscription required for summaries"
+        )
     return SummaryResponse(summary=summarize_text(payload.text))
 
 
@@ -55,16 +59,55 @@ def summary(user_id: str, payload: TranslationRequest) -> SummaryResponse:
 def analyze_letter(payload: LetterAnalysisRequest) -> LetterAnalysisResponse:
     subscription = get_subscription_state(payload.user_id)
 
-    translated = translate_text(payload.ocr_text, "de", "en")
-    summary_text = summarize_text(translated)
+    # Check quota for free users
+    used = get_monthly_scan_usage(payload.user_id)
+    is_premium = bool(subscription["premium"])
+    if not is_premium and used >= FREE_MONTHLY_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail="Monthly scan limit reached. Upgrade to premium for unlimited scans."
+        )
 
-    return LetterAnalysisResponse(
-        original_text=payload.ocr_text,
-        translated_text=translated,
-        summary=summary_text,
-        due_dates=extract_due_dates(payload.ocr_text),
-        amounts=extract_amounts(payload.ocr_text),
-        contact_info=extract_contact_info(payload.ocr_text),
-        reference_numbers=extract_reference_numbers(payload.ocr_text),
-        premium=bool(subscription["premium"]),
-    )
+    # Validate input
+    if not payload.ocr_text or len(payload.ocr_text.strip()) < 20:
+        raise HTTPException(
+            status_code=400,
+            detail="Text too short. Please scan a valid German document."
+        )
+
+    try:
+        # Call Claude API for intelligent analysis
+        claude_result = analyze_letter_with_claude(payload.ocr_text)
+
+        # Validate it's actually a German document
+        if not claude_result.get("is_german_document", True):
+            raise HTTPException(
+                status_code=400,
+                detail="This does not appear to be a German document. Please scan a German official letter."
+            )
+
+        return LetterAnalysisResponse(
+            original_text=payload.ocr_text,
+            translated_text=claude_result.get("translated_text", ""),
+            summary=claude_result.get("summary", ""),
+            due_dates=claude_result.get("due_dates", []),
+            amounts=claude_result.get("amounts", []),
+            contact_info=claude_result.get("contact_info", []),
+            reference_numbers=claude_result.get("reference_numbers", []),
+            premium=is_premium,
+            subject=claude_result.get("subject", ""),           # NEW!!
+            letter_date=claude_result.get("letter_date", ""),   # NEW!!
+            has_payment_due=claude_result.get("has_payment_due", False),  # NEW!!
+            document_type=claude_result.get("document_type", ""),
+            urgency=claude_result.get("urgency", "LOW"),
+            sender=claude_result.get("sender", ""),
+            action_required=claude_result.get("action_required", ""),
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}"
+        )

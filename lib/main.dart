@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/anmeldung_page.dart';
-import 'screens/ai_assistant_page.dart';
-import 'screens/bureaucracy_page.dart';
-import 'screens/dashboard_page.dart';
 import 'screens/home_screen.dart';
-import 'screens/otp_page.dart';
-import 'screens/signup_page.dart';
-
-
-// ... import other pages
+import 'screens/letter_scanner/letter_scanner_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,49 +8,75 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'MyGermanFreund',
-        theme: ThemeData(
-          fontFamily: 'Montserrat',
-          primarySwatch: Colors.deepPurple,
-          scaffoldBackgroundColor: Color(0xFFF8F9FB),
-          appBarTheme: AppBarTheme(
-            elevation: 0,
-            backgroundColor: Colors.white,
-            iconTheme: IconThemeData(color: Colors.black),
-            titleTextStyle: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+      debugShowCheckedModeBanner: false,
+      title: 'MyGermanFreund',
+      theme: ThemeData(
+        fontFamily: 'Montserrat',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6C3CE1),
+          primary: const Color(0xFF6C3CE1),
+          secondary: const Color(0xFF00C896),
+          tertiary: const Color(0xFFFF6B6B),
+          background: const Color(0xFFF8F9FB),
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF8F9FB),
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          iconTheme: IconThemeData(color: Colors.black),
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF6C3CE1),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.grey),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 14,
             ),
           ),
         ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Colors.grey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+              color: Color(0xFF6C3CE1),
+              width: 2,
+            ),
+          ),
+        ),
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
       initialRoute: '/',
       routes: {
         '/': (context) => const HomeScreen(),
-        '/onboarding': (context) => const OnboardingSignupPage(),
-        '/dashboard': (context) => const DashboardPage(),
-        '/otp': (context) => const OtpCodePage(),
-        '/bureaucratic': (context) => const BureaucraticGuidancePage(),
-        '/checklists': (context) => const BureaucraticGuidancePage(),
-        '/prefilled': (context) => const BureaucraticGuidancePage(),
-        '/scanner': (context) => const BureaucraticGuidancePage(),
-        '/aichat': (context) => const AiAssistantPage(),
-        '/anmeldung': (context) => const AnmeldungPage(),
-        '/ai-assistant': (context) => const AiAssistantPage(),
-        // Add more routes here as you create new pages
+        '/scanner': (context) => const LetterScannerPage(),
       },
     );
   }
