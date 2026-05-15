@@ -74,3 +74,5 @@ web-ui/tsconfig.tsbuildinfo
 .env.local
 .env.production
 **/.env
+
+.venv

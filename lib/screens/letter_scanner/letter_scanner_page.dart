@@ -18,9 +18,26 @@ class LetterScannerPage extends StatefulWidget {
 
 class _LetterScannerPageState extends State<LetterScannerPage> {
   bool _isLoading = false;
+  OutputLanguage _selectedLanguage = OutputLanguage.english; // Default!!
   final ImagePicker _picker = ImagePicker();
 
-  // ─── Entry point ────────────────────────────────────────────────────────────
+  // ─── Language Options ────────────────────────────────────────────────────────
+  static const List<Map<String, String>> _languages = [
+    {
+      'value': 'english',
+      'label': 'English',
+      'flag': '🇬🇧',
+      'desc': 'Plain English',
+    },
+    {
+      'value': 'simple_german',
+      'label': 'Einfaches Deutsch',
+      'flag': '🇩🇪',
+      'desc': 'Leichte Sprache',
+    },
+  ];
+
+  // ─── Entry point ─────────────────────────────────────────────────────────────
   Future<void> _onScanButtonPressed() async {
     final choice = await _showSourcePickerDialog();
     if (choice == null || !mounted) return;
@@ -28,7 +45,6 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
     setState(() => _isLoading = true);
 
     try {
-      // Returns combined OCR text (single or multi-page)
       final extractedText = await _acquireAndExtractText(choice);
       if (!mounted) return;
 
@@ -39,12 +55,17 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
 
       if (extractedText.trim().isEmpty) {
         setState(() => _isLoading = false);
-        _showError("No text detected.\n\nTips:\n• Ensure good lighting\n• Hold phone steady\n• Keep letter flat");
+        _showError(
+          "No text detected.\n\nTips:\n• Ensure good lighting\n• Hold phone steady\n• Keep letter flat",
+        );
         return;
       }
 
-      // Send combined text to Claude API
-      final analyzedData = await ApiService.analyzeLetter(extractedText);
+      // Pass selected language to API!!
+      final analyzedData = await ApiService.analyzeLetter(
+        extractedText,
+        language: _selectedLanguage,
+      );
       if (!mounted) return;
 
       setState(() => _isLoading = false);
@@ -58,16 +79,20 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
           ),
         ),
       );
-
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
       final msg = e.toString();
       if (msg.contains('429') || msg.contains('limit reached')) {
-        _showError("You've used all 3 free scans this month.\n\nPremium plan coming soon!");
-      } else if (msg.contains('SocketException') || msg.contains('connection')) {
-        _showError("No internet connection.\nPlease check your WiFi and try again.");
+        _showError(
+          "You've used all 3 free scans this month.\n\nPremium plan coming soon!",
+        );
+      } else if (msg.contains('SocketException') ||
+          msg.contains('connection')) {
+        _showError(
+          "No internet connection.\nPlease check your WiFi and try again.",
+        );
       } else if (msg.contains('timeout')) {
         _showError("Request timed out.\nPlease try again.");
       } else {
@@ -76,21 +101,19 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
     }
   }
 
-  // ─── Acquire image(s) and return combined OCR text ──────────────────────────
+  // ─── Acquire image(s) and return combined OCR text ───────────────────────────
   Future<String?> _acquireAndExtractText(_ScanChoice choice) async {
     switch (choice) {
       case _ScanChoice.camera:
         return await _extractSingleImage(ImageSource.camera);
-
       case _ScanChoice.gallery:
         return await _extractSingleImage(ImageSource.gallery);
-
       case _ScanChoice.docScanner:
         return await _extractDocScannerPages();
     }
   }
 
-  // ─── Single image (camera or gallery) ───────────────────────────────────────
+  // ─── Single image (camera or gallery) ────────────────────────────────────────
   Future<String?> _extractSingleImage(ImageSource source) async {
     final picked = await _picker.pickImage(
       source: source,
@@ -101,27 +124,27 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
 
     final imagePath = picked.path;
 
-    // Clarity check
     final clarityOK = await _isImageClear(imagePath);
     if (!mounted) return null;
     if (!clarityOK) {
       setState(() => _isLoading = false);
-      _showError("The document is too blurry.\n\nTips:\n• Better lighting\n• Hold phone steady\n• Keep letter flat");
+      _showError(
+        "The document is too blurry.\n\nTips:\n• Better lighting\n• Hold phone steady\n• Keep letter flat",
+      );
       return null;
     }
 
-    // Fix orientation then OCR
     final corrected = await ImageUtils.fixOrientation(File(imagePath));
     return await OcrService.extractText(corrected);
   }
 
-  // ─── Document Scanner — multi-page!! ────────────────────────────────────────
+  // ─── Document Scanner — multi-page!! ─────────────────────────────────────────
   Future<String?> _extractDocScannerPages() async {
     try {
-      final scannedFiles = await DocumentScanner.scan(format: DocScanFormat.jpeg);
+      final scannedFiles =
+      await DocumentScanner.scan(format: DocScanFormat.jpeg);
       if (scannedFiles == null || scannedFiles.isEmpty) return null;
 
-      // OCR every page and combine text
       final buffer = StringBuffer();
 
       for (int i = 0; i < scannedFiles.length; i++) {
@@ -131,7 +154,6 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
 
         if (pageText.trim().isNotEmpty) {
           if (scannedFiles.length > 1) {
-            // Only add page markers for multi-page docs
             buffer.writeln("--- Page ${i + 1} ---");
           }
           buffer.writeln(pageText.trim());
@@ -140,7 +162,6 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
       }
 
       return buffer.toString();
-
     } catch (e) {
       if (!mounted) return null;
 
@@ -152,7 +173,8 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
         isUnavailable = code.contains('unavailable') ||
             code.contains('not_found') ||
             code.contains('activity') ||
-            (e.message?.toLowerCase().contains('feature not available') ?? false) ||
+            (e.message?.toLowerCase().contains('feature not available') ??
+                false) ||
             (e.message?.toLowerCase().contains('google play') ?? false);
       } else {
         isUnavailable = message.contains('feature not available') ||
@@ -164,12 +186,12 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              "Document scanner not available on this device. Please use Camera or Upload.",
+              "Document scanner not available. Please use Camera or Upload.",
             ),
           ),
         );
-        // Fallback to camera/gallery
-        final fallback = await _showSourcePickerDialog(excludeDocScanner: true);
+        final fallback =
+        await _showSourcePickerDialog(excludeDocScanner: true);
         if (!mounted || fallback == null) return null;
         return await _acquireAndExtractText(fallback);
       }
@@ -178,14 +200,15 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
     }
   }
 
-  // ─── Error popup — user never gets stuck!! ──────────────────────────────────
+  // ─── Error popup ──────────────────────────────────────────────────────────────
   void _showError(String message) {
     if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
             Icon(Icons.error_outline, color: Colors.red, size: 28),
@@ -220,34 +243,62 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
     );
   }
 
-  // ─── Source picker dialog ────────────────────────────────────────────────────
-  Future<_ScanChoice?> _showSourcePickerDialog({bool excludeDocScanner = false}) {
+  // ─── Source picker dialog ─────────────────────────────────────────────────────
+  Future<_ScanChoice?> _showSourcePickerDialog(
+      {bool excludeDocScanner = false}) {
     return showDialog<_ScanChoice>(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text("How would you like to scan?"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt, color: Color(0xFF6C3CE1)),
+              leading:
+              const Icon(Icons.camera_alt, color: Color(0xFF6C3CE1)),
               title: const Text("Camera"),
-              subtitle: const Text("Take a photo now"),
+              subtitle: const Text("Take photo — single page"),
               onTap: () => Navigator.pop(context, _ScanChoice.camera),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: Color(0xFF6C3CE1)),
+              leading: const Icon(Icons.photo_library,
+                  color: Color(0xFF6C3CE1)),
               title: const Text("Upload Image"),
-              subtitle: const Text("Choose from gallery"),
+              subtitle: const Text("Choose from gallery — single page"),
               onTap: () => Navigator.pop(context, _ScanChoice.gallery),
             ),
             if (!excludeDocScanner)
               ListTile(
-                leading: const Icon(Icons.document_scanner, color: Color(0xFF6C3CE1)),
-                title: const Text("Document Scanner"),
+                leading: const Icon(Icons.document_scanner,
+                    color: Color(0xFF00C896)),
+                title: Row(
+                  children: [
+                    const Text("Document Scanner"),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color:
+                        const Color(0xFF00C896).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        "MULTI-PAGE",
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF00C896),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 subtitle: const Text("Scan multiple pages at once"),
-                onTap: () => Navigator.pop(context, _ScanChoice.docScanner),
+                onTap: () =>
+                    Navigator.pop(context, _ScanChoice.docScanner),
               ),
           ],
         ),
@@ -261,7 +312,86 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
     );
   }
 
-  // ─── Blur detection ──────────────────────────────────────────────────────────
+  // ─── Language Selector Widget ─────────────────────────────────────────────────
+  Widget _buildLanguageSelector() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: _languages.map((lang) {
+          final isSelected =
+              _selectedLanguage == OutputLanguage.values.firstWhere(
+                    (e) => e.name ==
+                    (lang['value'] == 'simple_german'
+                        ? 'simpleGerman'
+                        : 'english'),
+              );
+
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedLanguage = lang['value'] == 'simple_german'
+                      ? OutputLanguage.simpleGerman
+                      : OutputLanguage.english;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFF6C3CE1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      lang['flag']!,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      lang['label']!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color:
+                        isSelected ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      lang['desc']!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isSelected
+                            ? Colors.white70
+                            : Colors.black45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ─── Blur detection ───────────────────────────────────────────────────────────
   double _computeLaplacianVariance(img.Image image) {
     final img.Image resized =
     image.width > 800 ? img.copyResize(image, width: 800) : image;
@@ -310,7 +440,7 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
     }
   }
 
-  // ─── UI ─────────────────────────────────────────────────────────────────────
+  // ─── UI ───────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -320,9 +450,7 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
         foregroundColor: Colors.white,
       ),
       body: Center(
-        child: _isLoading
-            ? _buildLoadingState()
-            : _buildIdleState(),
+        child: _isLoading ? _buildLoadingState() : _buildIdleState(),
       ),
     );
   }
@@ -333,14 +461,18 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
       children: [
         const CircularProgressIndicator(color: Color(0xFF6C3CE1)),
         const SizedBox(height: 20),
-        const Text(
-          "Analysing your letter...",
-          style: TextStyle(fontSize: 16, color: Colors.black54),
+        Text(
+          _selectedLanguage == OutputLanguage.simpleGerman
+              ? "Brief wird analysiert..."
+              : "Analysing your letter...",
+          style: const TextStyle(fontSize: 16, color: Colors.black54),
         ),
         const SizedBox(height: 8),
-        const Text(
-          "This may take a moment",
-          style: TextStyle(fontSize: 13, color: Colors.black38),
+        Text(
+          _selectedLanguage == OutputLanguage.simpleGerman
+              ? "Das dauert einen Moment"
+              : "This may take a moment",
+          style: const TextStyle(fontSize: 13, color: Colors.black38),
         ),
         const SizedBox(height: 24),
         TextButton(
@@ -352,11 +484,14 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
   }
 
   Widget _buildIdleState() {
+    final isGerman = _selectedLanguage == OutputLanguage.simpleGerman;
+
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Icon
           Container(
             width: 110,
             height: 110,
@@ -370,35 +505,62 @@ class _LetterScannerPageState extends State<LetterScannerPage> {
               color: Color(0xFF6C3CE1),
             ),
           ),
-          const SizedBox(height: 28),
-          const Text(
-            "Scan Your Letter",
-            style: TextStyle(
+          const SizedBox(height: 24),
+
+          // Title
+          Text(
+            isGerman ? "Brief scannen" : "Scan Your Letter",
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
               color: Colors.black87,
             ),
           ),
-          const SizedBox(height: 10),
-          const Text(
-            "Use Document Scanner for multi-page letters.\nCamera or Upload for single pages.",
+          const SizedBox(height: 8),
+
+          // Subtitle
+          Text(
+            isGerman
+                ? "Wählen Sie Ihre Sprache.\nDann scannen Sie den Brief."
+                : "Choose your language then scan!!",
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: Colors.black45,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 36),
+          const SizedBox(height: 32),
+
+          // Language Selector!!
+          _buildLanguageSelector(),
+          const SizedBox(height: 10),
+
+          // Language hint
+          Text(
+            isGerman
+                ? "Ergebnis auf Einfachem Deutsch"
+                : "Results in plain English",
+            style: TextStyle(
+              fontSize: 12,
+              color: const Color(0xFF6C3CE1).withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Scan Button
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton.icon(
               onPressed: _onScanButtonPressed,
               icon: const Icon(Icons.add_a_photo, size: 22),
-              label: const Text(
-                "Scan or Upload Letter",
-                style: TextStyle(
+              label: Text(
+                isGerman
+                    ? "Brief scannen oder hochladen"
+                    : "Scan or Upload Letter",
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),

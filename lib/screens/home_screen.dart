@@ -99,10 +99,23 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
-        title: GestureDetector(
-          onTap: () => _showAboutDialog(context),
-          child: Image.asset('assets/MGF_Icon.png', height: 36),
+        centerTitle: false,
+        title: Row(
+          children: [
+            GestureDetector(
+              onTap: () => _showAboutDialog(context),
+              child: Image.asset('assets/MGF_Icon.png', height: 36),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              "MyGermanFreund",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF6C3CE1),
+              ),
+            ),
+          ],
         ),
       ),
       body: Padding(
